@@ -1,10 +1,6 @@
 import {NextFunction, Request, Response} from 'express';
-import dotenv from 'dotenv';
-import path from 'path';
-import jwt, {Secret} from 'jsonwebtoken';
 
-// Load the .env file from the top-level directory
-dotenv.config({path: path.resolve(__dirname, '../../../.env')});
+import jwt, {Secret} from 'jsonwebtoken';
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET is not defined in the environment variables');
@@ -29,8 +25,10 @@ const authenticateUser = async (
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, secret);
+    const decoded = jwt.verify(token, secret) as {userId: number};
     console.log(decoded);
+
+    (req as any).userId = decoded.userId;
     next();
   } catch (err) {
     return res.status(403).json({

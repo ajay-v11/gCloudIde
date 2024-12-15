@@ -1,13 +1,9 @@
 import {Request, Response} from 'express';
 import prisma from '../../prisma-client';
 import zod from 'zod';
-import dotenv from 'dotenv';
-import path from 'path';
+
 import jwt, {Secret} from 'jsonwebtoken';
 import Cookies from 'js-cookie';
-
-// Load the .env file from the top-level directory
-dotenv.config({path: path.resolve(__dirname, '../../../.env')});
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET is not defined in the environment variables');

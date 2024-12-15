@@ -14,17 +14,20 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  name     String
-  email    String @unique
-  password String
-  repls    Repl[]
+  id          Int    @id @default(autoincrement())
+  name        String
+  email       String @unique
+  password    String
+  repls       Repl[]
+  sharedRepls Repl[] @relation("ReplShare")
 }
 
 model Repl {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  title     String
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  title      String
+  language   String
+  author     User     @relation(fields: [authorId], references: [id])
+  authorId   Int
+  sharedWtih User[]   @relation("ReplShare")
 }
