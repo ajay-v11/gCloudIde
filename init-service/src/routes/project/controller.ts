@@ -41,11 +41,13 @@ export const createNewProject = async (
     const replId = newRepl.id;
     const lang = newRepl.language;
 
-    await copyGCSFolder(`base/${lang}`, `code/${userId}/${replId}`);
+    //uncomment the below line to copyfolders
+
+    //await copyGCSFolder(`base/${lang}`, `code/${userId}/${replId}`);
 
     res.status(200).json({
       message: 'Project created successfully',
-      id: replId,
+      replid: replId,
     });
   } catch (err) {
     console.log('Internal server error', err);
