@@ -1,4 +1,6 @@
+import axios from 'axios';
 import {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 
 const Dashboard = () => {
   const projects = ['Project Alpha', 'Project Beta', 'Project Gamma'];
@@ -37,10 +39,52 @@ const Dashboard = () => {
   ];
 
   const [selectedLanguage, setSelectedLanguage] = useState('');
+  const [title, setTitle] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDisabled, setIsDisable] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLanguageSelect = (languageName: string) => {
-    setSelectedLanguage(languageName);
-  };
+  async function handleSubmit() {
+    const jwt = localStorage.getItem('token');
+
+    setIsLoading(true);
+    setIsDisable(true);
+    try {
+      const response = await axios.post(
+        ' http://localhost:3000/api/v1/project/new',
+        {
+          title: title,
+          language: selectedLanguage,
+        },
+        {
+          headers: {Authorization: jwt},
+        }
+      );
+      navigate('/');
+      console.log(response);
+    } catch (err) {
+      console.log('there was an errror', err);
+      if (axios.isAxiosError(err)) {
+        // Check if the error is an AxiosError
+        console.log('there was an Axios error', err);
+        const {status, data} = err.response || {}; // Handle cases where 'response' might be undefined
+        if (status === 400) {
+          setErrorMessage('Please select a title and language');
+        } else if (status === 403) {
+          setErrorMessage(`${data?.message} ,Please signin again`);
+        } else {
+          setErrorMessage('An unexpected error occurred. Please try again.');
+        }
+      } else {
+        // Handle other error types
+        console.log('Unknown error:', err);
+        setErrorMessage('An unexpected error occurred.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
     <div className='flex min-h-screen [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)] text-white'>
@@ -52,7 +96,7 @@ const Dashboard = () => {
           {projects.map((project, index) => (
             <li
               key={index}
-              className='p-2 bg-gray-900 rounded hover:bg-gray-800 cursor-pointer'>
+              className='p-2 bg-black cursor-pointer text-slate-500 hover:text-white'>
               {project}
             </li>
           ))}
@@ -71,12 +115,14 @@ const Dashboard = () => {
                 <label
                   htmlFor='project-name'
                   className='block text-sm font-medium mb-2'>
-                  Project Name
+                  Project Name{title}
+                  {errorMessage}
                 </label>
                 <input
                   id='project-name'
                   type='text'
                   placeholder='Enter project name'
+                  onChange={(e) => setTitle(e.target.value)}
                   className='w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none'
                 />
               </div>
@@ -91,7 +137,7 @@ const Dashboard = () => {
                           ? 'bg-indigo-800 text-slate-100 '
                           : 'bg-gray-700'
                       }`}
-                      onClick={() => handleLanguageSelect(lang.name)}>
+                      onClick={() => setSelectedLanguage(lang.name)}>
                       <div className='flex items-center space-x-3'>
                         <span className='text-2xl'>{lang.logo}</span>
                         <div>
@@ -105,8 +151,18 @@ const Dashboard = () => {
                   ))}
                 </div>
               </div>
-              <button className='w-full text-large py-4 bg-indigo-900 hover:bg-idigo-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-700 transition ease-in-out hover:-translate-y-1 hover:scale-110 hover:bg-indigo-500 duration-150'>
-                Start writing a new program in {selectedLanguage}
+              {errorMessage && (
+                <div className='text-red-600 animate-bounce pt-6'>
+                  {errorMessage}
+                </div>
+              )}
+              <button
+                className='w-full text-large py-4 bg-indigo-900 hover:bg-idigo-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-700 transition ease-in-out hover:-translate-y-1 hover:scale-110 hover:bg-indigo-500 duration-150'
+                onClick={handleSubmit}
+                disabled={isDisabled}>
+                {isLoading
+                  ? 'Loading'
+                  : `Start writing a new program in ${selectedLanguage}`}
               </button>
             </div>
           </div>
