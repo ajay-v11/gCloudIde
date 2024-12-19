@@ -45,6 +45,10 @@ const Dashboard = () => {
   const [isDisabled, setIsDisable] = useState(false);
   const navigate = useNavigate();
 
+  function nextPage() {
+    navigate('/code');
+  }
+
   async function handleSubmit() {
     const jwt = localStorage.getItem('token');
 
@@ -61,7 +65,7 @@ const Dashboard = () => {
           headers: {Authorization: jwt},
         }
       );
-      navigate('/');
+      navigate('/code');
       console.log(response);
     } catch (err) {
       console.log('there was an errror', err);
@@ -158,7 +162,7 @@ const Dashboard = () => {
               )}
               <button
                 className='w-full text-large py-4 bg-indigo-900 hover:bg-idigo-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-700 transition ease-in-out hover:-translate-y-1 hover:scale-110 hover:bg-indigo-500 duration-150'
-                onClick={handleSubmit}
+                onClick={nextPage}
                 disabled={isDisabled}>
                 {isLoading
                   ? 'Loading'

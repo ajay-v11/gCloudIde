@@ -1,9 +1,9 @@
 import {useNavigate} from 'react-router-dom';
 import {useCookies} from 'react-cookie';
 
-import {BackgroundBeams} from '../components/background-beam';
-import {Button} from '../components/moving-border';
-import {FlipWords} from '../components/flip-words';
+import {BackgroundBeams} from '../components/ui/background-beam';
+import {Button} from '../components/ui/moving-border';
+import {FlipWords} from '../components/ui/flip-words';
 import Marquee from 'react-fast-marquee';
 
 const Home = () => {
