@@ -1,4 +1,5 @@
-'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React from 'react';
 import {
   motion,
@@ -78,7 +79,7 @@ export const MovingBorder = ({
   rx?: string;
   ry?: string;
 
-  [key: string]: any;
+  [key: string]: unknown;
 }) => {
   const pathRef = useRef<any>();
   const progress = useMotionValue<number>(0);

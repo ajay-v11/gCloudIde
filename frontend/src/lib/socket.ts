@@ -1,5 +1,8 @@
-import {io} from 'socket.io-client';
+import io from 'socket.io-client';
 
-const socket = io('http://localhost:3000');
-
-export default socket;
+// Create socket connection with debug logs
+export const socket = io('http://localhost:3001', {
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+});
