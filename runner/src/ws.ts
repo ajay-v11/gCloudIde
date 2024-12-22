@@ -12,7 +12,7 @@ export const initWebSockets = (httpServer: HttpServer) => {
     cors: {origin: '*'},
   });
 
-  const basePath = path.resolve(process.env.INIT_CWD + '/user');
+  const basePath = '/user';
   const watcher = chokidar.watch(basePath, {persistent: true});
 
   const refreshFileTree = debounce(async () => {
@@ -58,7 +58,7 @@ export const initWebSockets = (httpServer: HttpServer) => {
     socket.on('file:change', async ({selectedFileName, content}) => {
       console.log(selectedFileName);
       try {
-        const filePath = process.env.INIT_CWD + '/user' + selectedFileName;
+        const filePath = '/user' + selectedFileName;
         console.log('Writing to file:', filePath);
 
         await fsp.writeFile(filePath, content);
