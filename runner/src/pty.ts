@@ -5,7 +5,7 @@ export const createPtyProcess = () => {
     name: 'xterm-color',
     cols: 40,
     rows: 24,
-    cwd: '/user',
+    cwd: '/workspace',
     env: {
       ...process.env,
       TERM: 'xterm-color',

@@ -24,6 +24,7 @@
     "react-fast-marquee": "^1.6.5",
     "react-hook-form": "^7.54.1",
     "react-resizable": "^3.0.5",
+    "react-resizable-panels": "^2.1.7",
     "react-router-dom": "^7.0.2",
     "react-xtermjs": "^1.0.9",
     "socket.io-client": "^4.8.1",

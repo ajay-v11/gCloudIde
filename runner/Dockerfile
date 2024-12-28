@@ -4,8 +4,8 @@ FROM node:20
 # Set the working directory in the container
 WORKDIR /code
 
-# Create the /user directory
-RUN mkdir -p /user
+# Create the /workspace directory
+RUN mkdir -p /workspace
 
 # Copy package.json and package-lock.json (if available) to the working directory
 COPY package*.json ./

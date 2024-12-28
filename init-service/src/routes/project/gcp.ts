@@ -16,10 +16,6 @@ export async function copyGCSFolder(
   destinationPrefix: string,
   pageToken?: string
 ): Promise<void> {
-  console.log('inside the function');
-
-  console.log(bucketName);
-
   try {
     // List objects in the source folder
     const [files, nextQuery] = await storage.bucket(bucketName).getFiles({

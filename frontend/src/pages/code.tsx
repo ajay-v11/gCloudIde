@@ -1,8 +1,8 @@
 import {useEffect, useState} from 'react';
-import MyTerminal from '../components/terminal';
-import Editor from '@monaco-editor/react';
-import FileTree from '../components/filetree';
+
 import {socket} from '../lib/socket';
+
+import MyEditor from '../components/Ide';
 
 interface FileNode {
   [key: string]: FileNode | null; // Directory with children or a file (null)
@@ -58,13 +58,19 @@ const CodeEditor = () => {
 
   // Listen for file:refresh updates
   useEffect(() => {
-    socket.on('file:refresh', updateFileTree);
+    const handleFileRefresh = (updatedFileTree: FileNode) => {
+      console.log('File tree refreshed:', updatedFileTree);
+      updateFileTree(updatedFileTree);
+    };
+
+    socket.on('file:refresh', handleFileRefresh);
+    console.log('fieltree on refresh', fileTree);
 
     // Cleanup listener on component unmount
     return () => {
-      socket.off('file:refresh', updateFileTree);
+      socket.off('file:refresh', handleFileRefresh);
     };
-  });
+  }, [socket]);
 
   //code updation
 
@@ -103,55 +109,15 @@ const CodeEditor = () => {
   }, [selectedFile, selectedFileContent]);
 
   return (
-    <div>
-      <div className='grid grid-cols-12 p-2 px-1 bg-black gap-2'>
-        <div className='col-span-1 bg-[#1e1e1e] text-slate-400'>
-          <h1 className='font-bold text-lg py-2 pl-3 bg-black '>File tree</h1>
-          <FileTree tree={fileTree} onSelect={handleFileSelect} />
-        </div>
-        <div className='col-span-7 rounded'>
-          <div className='bg-black text-white flex items-center justify-between py-2 px-6'>
-            {selectedFile || 'Please select a file'}
-            {isSaved ? (
-              <span className='text-green-500'>Saved</span>
-            ) : (
-              <span className='text-red-500'>Unsaved{error}</span>
-            )}
-            <button className='bg-green-700 w-20 h-8 rounded-lg'>Run</button>
-          </div>
-          <div className='h-[92vh] rounded-lg border border-slate-600 text-white flex justify-center '>
-            {selectedFile ? (
-              <Editor
-                defaultLanguage='javascript'
-                defaultValue='// your changes will be automatically save after 3 seconds'
-                onChange={handleEditorChange}
-                theme='vs-dark'
-                value={code}
-              />
-            ) : (
-              <div className=' h-96 w-96 text-gray-50 text-center'>
-                <h1 className='pt-28 font-bold text-2xl'>
-                  {'<---'}Please select a file to start with
-                </h1>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className='col-span-4 flex flex-col pt-1 gap-1 h-[94vh]'>
-          <h1 className='text-white'>Output</h1>
-          <div className='basis-1/2 bg-slate-200 text-white rounded-md border border-slate-600'>
-            <iframe
-              width={'100%'}
-              height={'100%'}
-              src={`/public/java-vertical.svg`}
-            />
-          </div>
-          <div className='basis-1/2 rounded-md border border-slate-600'>
-            <MyTerminal />
-          </div>
-        </div>
-      </div>
-    </div>
+    <MyEditor
+      fileTree={fileTree}
+      handleEditorChange={handleEditorChange}
+      handleFileSelect={handleFileSelect}
+      code={code}
+      selectedFile={selectedFile}
+      isSaved={isSaved}
+      error={error}
+    />
   );
 };
 

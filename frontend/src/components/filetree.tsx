@@ -12,7 +12,7 @@ interface FileTreeNodeProps {
 }
 
 const FileTreeNode = ({fileName, nodes, onSelect, path}: FileTreeNodeProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const isDir = nodes !== null;
 
   return (

@@ -112,7 +112,7 @@ const MyTerminal = () => {
         console.log('Terminal instance exists:', !!terminalInstance.current);
         console.log('Socket connected:', socket.connected);
       }}
-      className='h-96 w-full bg-[#1e1e1e] text-[#e0e0e0] rounded-lg overflow-hidden p-2'
+      className='h-96 w-full bg-[#1e1e1e] text-[#e0e0e0] rounded-lg overflow-auto p-2'
     />
   );
 };

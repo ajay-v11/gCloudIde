@@ -4,7 +4,7 @@ import Home from './pages/home';
 import SignInPage from './pages/signin';
 import SignUpPage from './pages/signup';
 import Dashboard from './pages/dashboard';
-import CodeEditor from './pages/code';
+import {CodingPage} from './pages/codingpage';
 
 function App() {
   return (
@@ -13,7 +13,7 @@ function App() {
         <Route path='/signin' element={<SignInPage />} />
         <Route path='/signup' element={<SignUpPage />} />
         <Route path='/dashboard' element={<Dashboard />} />
-        <Route path='/code' element={<CodeEditor />} />
+        <Route path='/code' element={<CodingPage />} />
         <Route path='/' element={<Home />} />
       </Routes>
     </BrowserRouter>

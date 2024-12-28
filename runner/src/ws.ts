@@ -1,18 +1,17 @@
 import {Server} from 'socket.io';
 import {Server as HttpServer} from 'http';
 import {createPtyProcess} from './pty';
-import {generateFileTree, getCode} from './fs';
+import {generateFileTree, getCode, saveFile} from './fs';
 import chokidar from 'chokidar';
-import path from 'path';
-import fsp from 'fs/promises';
 import debounce from 'lodash.debounce';
+import {saveToGCS} from './gcp';
 
 export const initWebSockets = (httpServer: HttpServer) => {
   const io = new Server(httpServer, {
     cors: {origin: '*'},
   });
 
-  const basePath = '/user';
+  const basePath = '/workspace';
   const watcher = chokidar.watch(basePath, {persistent: true});
 
   const refreshFileTree = debounce(async () => {
@@ -58,10 +57,11 @@ export const initWebSockets = (httpServer: HttpServer) => {
     socket.on('file:change', async ({selectedFileName, content}) => {
       console.log(selectedFileName);
       try {
-        const filePath = '/user' + selectedFileName;
+        const filePath = '/workspace' + selectedFileName;
         console.log('Writing to file:', filePath);
 
-        await fsp.writeFile(filePath, content);
+        await saveFile(filePath, content);
+        await saveToGCS('4', filePath, content);
         console.log('File updated successfully.');
       } catch (err) {
         console.error('Error writing file:', err);
@@ -72,10 +72,6 @@ export const initWebSockets = (httpServer: HttpServer) => {
     socket.on('disconnect', () => {
       console.log('User disconnected', socket.id);
       ptyProcess.kill();
-      if (io.engine.clientsCount === 0) {
-        watcher.close();
-        console.log('Watcher closed as all clients disconnected.');
-      }
     });
   });
 };

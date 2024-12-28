@@ -32,7 +32,7 @@ const Dashboard = () => {
       description: 'Popular for enterprise applications',
     },
     {
-      name: 'html',
+      name: 'Html',
       logo: <img src='/html-1.svg' className='h-20 w-20'></img>,
       description: 'Popular for enterprise applications',
     },
@@ -44,10 +44,6 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDisabled, setIsDisable] = useState(false);
   const navigate = useNavigate();
-
-  function nextPage() {
-    navigate('/code');
-  }
 
   async function handleSubmit() {
     const jwt = localStorage.getItem('token');
@@ -65,8 +61,11 @@ const Dashboard = () => {
           headers: {Authorization: jwt},
         }
       );
-      navigate('/code');
       console.log(response);
+      const replId = response.data.replid;
+      const userId = response.data.userid;
+      console.log(replId, userId);
+      navigate(`/code/?replid=${replId}&userid=${userId}`);
     } catch (err) {
       console.log('there was an errror', err);
       if (axios.isAxiosError(err)) {
@@ -162,7 +161,7 @@ const Dashboard = () => {
               )}
               <button
                 className='w-full text-large py-4 bg-indigo-900 hover:bg-idigo-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-700 transition ease-in-out hover:-translate-y-1 hover:scale-110 hover:bg-indigo-500 duration-150'
-                onClick={nextPage}
+                onClick={handleSubmit}
                 disabled={isDisabled}>
                 {isLoading
                   ? 'Loading'

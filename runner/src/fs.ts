@@ -73,7 +73,7 @@ export async function generateFileTree(directory: string) {
 }
 
 export const getCode = (fileName: string): Promise<string> => {
-  const filePath = `/user/${fileName}`;
+  const filePath = `/workspace/${fileName}`;
 
   console.log('Resolved filePath:', filePath);
   return new Promise((resolve, reject) => {
