@@ -44,15 +44,12 @@ app.post('/start', async (req, res) => {
 
   // Assume a unique identifier for each user
 
-  const destinatation = 'hithere';
-  console.log(destinatation);
-
   const namespace = 'default'; // Assuming a default namespace, adjust as needed
 
   try {
     const kubeManifests = readAndParseKubeYaml(
       path.join(__dirname, '../service.yaml'),
-      destinatation
+      replId
     );
     for (const manifest of kubeManifests) {
       switch (manifest.kind) {

@@ -12,8 +12,6 @@ export const createNewProject = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  console.log('hello fromt the project');
-
   const body = req.body;
   //@ts-ignore
   const userId = req.userId;
@@ -43,7 +41,7 @@ export const createNewProject = async (
 
     //uncomment the below line to copyfolders
 
-    await copyGCSFolder(`base/${lang}`, `code/${userId}/${replId}`);
+    await copyGCSFolder(`base/${lang}`, `code/${replId}`);
 
     res.status(200).json({
       message: 'Project created successfully',
