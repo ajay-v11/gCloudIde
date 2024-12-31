@@ -1,8 +1,8 @@
 import {useEffect, useState} from 'react';
 
-import {socket} from '../lib/socket';
-
 import MyEditor from '../components/Ide';
+import {useSearchParams} from 'react-router-dom';
+import {createSocketConnection} from '../lib/socket';
 
 interface FileNode {
   [key: string]: FileNode | null; // Directory with children or a file (null)
@@ -15,6 +15,11 @@ const CodeEditor = () => {
   const [selectedFileContent, setSelectedFileContent] = useState('');
   const [isSaved, setIsSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const replId = searchParams.get('replid') ?? '';
+  console.log('replid from the code', replId);
+
+  const socket = createSocketConnection(replId);
 
   function handleEditorChange(value: string | undefined) {
     if (!value) return;

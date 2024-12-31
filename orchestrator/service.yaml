@@ -32,7 +32,8 @@ spec:
           command: ['/bin/sh', '-c']
           args:
             - |
-              gcloud storage cp "gs://basecode/code/service_name/" /workspace/ --recursive && 
+              mkdir -p /workspace &&
+              gcloud storage cp "gs://basecode/code/service_name/*" /workspace/ &&
               echo "Resources copied from GCS"
           volumeMounts:
             - name: workspace-volume
@@ -45,13 +46,7 @@ spec:
           volumeMounts:
             - name: workspace-volume
               mountPath: /workspace
-          resources:
-            requests:
-              cpu: '1'
-              memory: '1Gi'
-            limits:
-              cpu: '1'
-              memory: '1Gi'
+      serviceAccountName: my-k8s-sa
 ---
 apiVersion: v1
 kind: Service

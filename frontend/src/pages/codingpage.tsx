@@ -4,10 +4,11 @@ import {useSearchParams} from 'react-router-dom';
 import CodeEditor from './code';
 
 export const CodingPage = () => {
-  const [podCreated, setPodCreated] = useState(false);
+  const [podCreated, setPodCreated] = useState(true);
   const [searchParams] = useSearchParams();
   const replId = searchParams.get('replid') ?? '';
   const userId = searchParams.get('userid') ?? '';
+  console.log('replid from param', replId);
 
   useEffect(() => {
     if (replId) {
@@ -16,7 +17,7 @@ export const CodingPage = () => {
         .then(() => setPodCreated(true))
         .catch((err) => console.error(err));
     }
-  }, []);
+  });
 
   if (!podCreated) {
     return <>Booting...</>;

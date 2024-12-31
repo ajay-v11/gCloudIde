@@ -2,13 +2,19 @@ import {useEffect, useRef} from 'react';
 import {Terminal} from '@xterm/xterm';
 import {FitAddon} from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
-import {socket} from '../lib/socket';
+import {useSearchParams} from 'react-router-dom';
+import {createSocketConnection} from '../lib/socket';
 
 const MyTerminal = () => {
   const terminalRef = useRef<HTMLDivElement>(null);
   const terminalInstance = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const isInitializedRef = useRef(false);
+  const [searchParams] = useSearchParams();
+  const replId = searchParams.get('replid') ?? '';
+  console.log('replid from the terminal', replId);
+
+  const socket = createSocketConnection(replId);
 
   useEffect(() => {
     // Guard clause with debug

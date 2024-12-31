@@ -1,8 +1,10 @@
 import io from 'socket.io-client';
 
-// Create socket connection with debug logs
-export const socket = io('http://hithere.cloudide.site', {
-  reconnection: true,
-  reconnectionAttempts: 5,
-  reconnectionDelay: 1000,
-});
+export const createSocketConnection = (replId: string) => {
+  return io(`http://${replId}.cloudide.site`, {
+    transports: ['websocket'],
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+  });
+};
