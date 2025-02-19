@@ -2,11 +2,19 @@ import {useEffect, useState} from 'react';
 
 import MyEditor from '../components/Ide';
 import {useSearchParams} from 'react-router-dom';
-import {createSocketConnection} from '../lib/socket';
+
+import {socketManager} from '../lib/sockerManger';
 
 interface FileNode {
   [key: string]: FileNode | null; // Directory with children or a file (null)
 }
+
+interface FileChangePayLoad {
+  selectedFileName: string;
+  content: string;
+}
+
+const CODE_AUTO_SAVE_DELAY = 3000; //3seconds
 
 const CodeEditor = () => {
   const [code, setCode] = useState<string | undefined>();
@@ -19,94 +27,69 @@ const CodeEditor = () => {
   const replId = searchParams.get('replid') ?? '';
   console.log('replid from the code', replId);
 
-  const socket = createSocketConnection(replId);
+  //const socket = createSocketConnection(replId);
 
-  function handleEditorChange(value: string | undefined) {
+  useEffect(() => {
+    // Connect if not already connected
+    const socket = socketManager.connect('replId');
+    //setup event handlers
+    const eventHandlers = {
+      'file:tree': (data: FileNode | null) => setFileTree(data),
+      'file:refresh': (updatedFileTree: FileNode) => {
+        console.log('file tree refreshed', updatedFileTree);
+        setFileTree(updatedFileTree);
+      },
+      code: (receivedCode: string) => {
+        setCode(receivedCode);
+        setError(null);
+      },
+      error: (err: {message: string}) => setError(err.message),
+    };
+
+    //Subscribe to all events
+    Object.entries(eventHandlers).forEach(([event, handler]) => {
+      socketManager.subscribe(event, handler);
+    });
+
+    //cleanup
+    return () => {
+      Object.entries(eventHandlers).forEach(([event, handler]) => {
+        socketManager.unsubscribe(event, handler);
+      });
+    };
+  }, [replId]);
+
+  //handle editor content changes
+
+  const handleEditorChange = (value: string | undefined) => {
     if (!value) return;
-    console.log('Current model value:', value);
     setCode(value);
     setIsSaved(false);
-  }
-
-  useEffect(() => {
-    if (code) {
-      const timer = setTimeout(() => {
-        socket.emit('file:change', {
-          selectedFileName: selectedFile,
-          content: code,
-        });
-        setIsSaved(true);
-      }, 3 * 1000);
-
-      // Send updated code after a 3-second delay
-      return () => {
-        clearTimeout(timer); // Clean up the timer on unmount or code change
-      };
-    }
-  }, [code, selectedFile]);
-
-  // To set the file tree and its contents
-  function setFiles(data: FileNode | null) {
-    setFileTree(data);
-  }
-
-  function setFilesFinal() {
-    socket.on('file:tree', setFiles);
-  }
-
-  useEffect(setFilesFinal, []);
-
-  // To update file tree when you add new folders or delete files
-  function updateFileTree(data: FileNode | null) {
-    setFileTree(data);
-  }
-
-  // Listen for file:refresh updates
-  useEffect(() => {
-    const handleFileRefresh = (updatedFileTree: FileNode) => {
-      console.log('File tree refreshed:', updatedFileTree);
-      updateFileTree(updatedFileTree);
-    };
-
-    socket.on('file:refresh', handleFileRefresh);
-    console.log('fieltree on refresh', fileTree);
-
-    // Cleanup listener on component unmount
-    return () => {
-      socket.off('file:refresh', handleFileRefresh);
-    };
-  }, [socket]);
-
-  //code updation
-
-  // Function to handle file selection
-  const handleFileSelect = (fileName: string) => {
-    setSelectedFile(fileName);
-    socket.emit('file:selected', fileName); // Notify server about the selected file
   };
 
+  // Handle file selection
+  const handleFileSelect = (fileName: string) => {
+    setSelectedFile(fileName);
+    socketManager.emit('file:selected', fileName);
+  };
+
+  // Auto-save functionality
   useEffect(() => {
-    // Listen for the "code" event from the server
-    const handleCode = (receivedCode: string) => {
-      setSelectedFileContent(receivedCode);
-      setError(null); // Clear any previous error
-    };
+    if (!code || !selectedFile) return;
 
-    // Listen for errors
-    const handleError = (err: {message: string}) => {
-      setError(err.message);
-    };
+    const timer = setTimeout(() => {
+      const payload: FileChangePayLoad = {
+        selectedFileName: selectedFile,
+        content: code,
+      };
+      socketManager.emit('file:change', payload);
+      setIsSaved(true);
+    }, CODE_AUTO_SAVE_DELAY);
 
-    socket.on('code', handleCode);
-    socket.on('error', handleError);
+    return () => clearTimeout(timer);
+  }, [code, selectedFile]);
 
-    // Cleanup listeners on component unmount
-    return () => {
-      socket.off('code', handleCode);
-      socket.off('error', handleError);
-    };
-  }, [selectedFile]);
-
+  // Update code when selected file content changes
   useEffect(() => {
     if (selectedFile && selectedFileContent) {
       setCode(selectedFileContent);

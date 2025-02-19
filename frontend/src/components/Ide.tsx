@@ -2,18 +2,20 @@ import {Panel, PanelGroup, PanelResizeHandle} from 'react-resizable-panels';
 import FileTree from './filetree';
 import Editor from '@monaco-editor/react';
 import MyTerminal from './terminal';
+import {useEffect, useMemo} from 'react';
 
 const ResizeHandle = () => (
-  <PanelResizeHandle className='w-2 hover:bg-slate-600 transition-colors duration-150 cursor-col-resize flex items-center justify-center'>
-    <div className='w-0.5 h-full bg-slate-700' />
+  <PanelResizeHandle className='w-2 transition-colors duration-150 cursor-col-resize flex items-center justify-center'>
+    <div className='w-0.5 h-full ' />
   </PanelResizeHandle>
 );
 
 const VerticalResizeHandle = () => (
-  <PanelResizeHandle className='h-2 hover:bg-slate-600 transition-colors duration-150 cursor-row-resize flex items-center justify-center'>
-    <div className='h-0.5 w-full bg-slate-700' />
+  <PanelResizeHandle className='h-2transition-colors duration-150 cursor-row-resize flex items-center justify-center'>
+    <div className='h-0.5 w-full ' />
   </PanelResizeHandle>
 );
+
 interface FileNode {
   [key: string]: FileNode | null; // Directory with children or a file (null)
 }
@@ -37,6 +39,37 @@ const MyEditor: React.FC<CloudIDEProps> = ({
   isSaved,
   error,
 }) => {
+  const extensionMap: Record<string, string> = {
+    js: 'javascript',
+    ts: 'typescript',
+    py: 'python',
+    java: 'java',
+    cpp: 'cpp',
+    cs: 'csharp',
+    html: 'html',
+    php: 'php',
+    css: 'css',
+    json: 'javascript',
+  };
+
+  // Use useMemo to compute the language based on file extension
+  const currentLanguage = useMemo(() => {
+    if (!selectedFile) return 'plaintext';
+
+    const parts = selectedFile.split('.');
+    if (parts.length < 2) return 'plaintext';
+
+    const ext = parts.pop()?.toLowerCase() || '';
+    return extensionMap[ext] || 'plaintext';
+  }, [selectedFile]);
+
+  // Validate file type on selection
+  useEffect(() => {
+    if (selectedFile && !currentLanguage) {
+      alert('File type not supported');
+    }
+  }, [selectedFile, currentLanguage]);
+
   return (
     <div className='h-screen bg-black'>
       <PanelGroup direction='horizontal' className='p-2'>
@@ -65,7 +98,7 @@ const MyEditor: React.FC<CloudIDEProps> = ({
             <div className='h-[calc(100%-3rem)] rounded-lg border border-slate-600 text-white'>
               {selectedFile ? (
                 <Editor
-                  defaultLanguage='javascript'
+                  language={currentLanguage}
                   defaultValue='// your changes will be automatically save after 3 seconds'
                   onChange={handleEditorChange}
                   theme='vs-dark'
@@ -73,7 +106,7 @@ const MyEditor: React.FC<CloudIDEProps> = ({
                   options={{
                     minimap: {enabled: true},
                     scrollBeyondLastLine: false,
-                    fontSize: 14,
+                    fontSize: 16,
                     lineNumbers: 'on',
                     automaticLayout: true,
                   }}
