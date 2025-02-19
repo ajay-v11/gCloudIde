@@ -1,6 +1,6 @@
 import fsp from 'fs/promises';
 import fs from 'fs';
-import path = require('path');
+import path from 'path';
 
 interface File {
   type: 'file' | 'dir';
@@ -17,7 +17,8 @@ export const fetchDir = (dir: string, baseDir: string): Promise<File[]> => {
           files.map((file) => ({
             type: file.isDirectory() ? 'dir' : 'file',
             name: file.name,
-            path: `${baseDir}/${file.name}`,
+            // Docker path: `${baseDir}/${file.name}`
+            path: path.join(baseDir, file.name),
           }))
         );
       }
@@ -68,12 +69,18 @@ export async function generateFileTree(directory: string) {
       }
     }
   }
+
   await buildTree(directory, tree);
   return tree;
 }
 
 export const getCode = (fileName: string): Promise<string> => {
-  const filePath = `/workspace/${fileName}`;
+  // Docker path: `/workspace/${fileName}`
+  const filePath = path.resolve(
+    process.cwd(),
+    'workspace',
+    fileName.replace(/^\//, '')
+  );
 
   console.log('Resolved filePath:', filePath);
   return new Promise((resolve, reject) => {

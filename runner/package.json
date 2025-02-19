@@ -22,10 +22,13 @@
     "http": "^0.0.1-security",
     "lodash.debounce": "^4.0.8",
     "node-pty": "^1.0.0",
-    "nodemon": "^3.1.9",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17"
+    "@types/cors": "^2.8.17",
+    "@types/node": "^22.13.1",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
   }
 }
