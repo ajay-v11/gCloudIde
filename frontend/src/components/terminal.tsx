@@ -25,7 +25,7 @@ const MyTerminal = () => {
     // Initialize terminal
     const terminal = new Terminal({
       cursorBlink: true,
-      fontSize: 16,
+      fontSize: 12,
       fontFamily: 'monospace',
       convertEol: true,
       theme: {
