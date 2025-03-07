@@ -6,7 +6,7 @@ const Dashboard = () => {
   const projects = ['Project Alpha', 'Project Beta', 'Project Gamma'];
   const languages = [
     {
-      name: 'JavaScript',
+      name: 'Javascript',
       logo: <img src='/logo-javascript.svg' className='h-20 w-20'></img>,
 
       description: 'Dynamic language for the web',

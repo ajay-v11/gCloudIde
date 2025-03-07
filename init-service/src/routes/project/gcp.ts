@@ -5,7 +5,7 @@ const storage = new Storage({
   projectId: process.env.GCP_PROJECT_ID,
   keyFilename: path.resolve(
     __dirname,
-    '../../../cloud-ide-444818-252a2cd444a0.json'
+    '../../../gen-lang-client-0618662481-ad19f4fba79f.json'
   ), // Path to your GCP service account key
 });
 

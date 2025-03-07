@@ -17,8 +17,9 @@ class SocketManager {
 
   connect(replId: string): Socket {
     if (!this.socket) {
+      //io(`http://localhost:3001`
       // io(`http://${replId}.cloudide.site`
-      this.socket = io(`http://localhost:3001`, {
+      this.socket = io(`http://${replId}.cloudide.site`, {
         transports: ['websocket'],
         reconnection: true,
         reconnectionAttempts: 5,

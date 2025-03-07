@@ -139,6 +139,91 @@ app.post('/start', async (req, res) => {
   }
 });
 
+app.post('/stop', async (req, res) => {
+  const {replId} = req.body;
+  const namespace = 'default';
+
+  try {
+    // Check if the session exists
+    if (!activeSessions.has(replId)) {
+      return res.status(404).send({
+        message: 'Session not found',
+      });
+    }
+
+    // Delete the resources
+    await deleteResources(replId, namespace);
+
+    // Remove the session from active sessions
+    activeSessions.delete(replId);
+
+    res.status(200).send({
+      message: 'Resources deleted successfully',
+    });
+  } catch (error) {
+    console.error('Failed to delete resources:', error);
+    res.status(500).send({
+      message: 'Failed to delete resources',
+      error: error.message,
+      details: error.response?.body?.message || error.response?.statusMessage,
+    });
+  }
+});
+
+app.get('/stats/:replId', async (req, res) => {
+  const {replId} = req.params;
+  const namespace = 'default';
+
+  try {
+    // Fetch deployment status
+    const deployment = await appsV1Api.readNamespacedDeployment(
+      replId,
+      namespace
+    );
+    const deploymentStatus = deployment.body.status;
+
+    // Fetch pods associated with the deployment
+    const pods = await coreV1Api.listNamespacedPod(
+      namespace,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      `app=${replId}` // Use the label selector to find pods for this deployment
+    );
+
+    const podDetails = await Promise.all(
+      pods.body.items.map(async (pod) => {
+        const podName = pod.metadata.name;
+
+        // Fetch pod logs
+        const logs = await coreV1Api.readNamespacedPodLog(podName, namespace);
+
+        // Fetch pod status
+        const podStatus = pod.status;
+
+        return {
+          podName,
+          logs,
+          status: podStatus,
+        };
+      })
+    );
+
+    res.status(200).send({
+      deploymentStatus,
+      pods: podDetails,
+    });
+  } catch (error) {
+    console.error('Failed to fetch stats:', error);
+    res.status(500).send({
+      message: 'Failed to fetch stats',
+      error: error.message,
+      details: error.response?.body?.message || error.response?.statusMessage,
+    });
+  }
+});
+
 const port = process.env.PORT || 3002;
 app.listen(port, () => {
   console.log(`Listening on port: ${port}`);

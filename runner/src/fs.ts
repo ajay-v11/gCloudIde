@@ -18,7 +18,8 @@ export const fetchDir = (dir: string, baseDir: string): Promise<File[]> => {
             type: file.isDirectory() ? 'dir' : 'file',
             name: file.name,
             // Docker path: `${baseDir}/${file.name}`
-            path: path.join(baseDir, file.name),
+            //path: path.join(baseDir, file.name),
+            path: path.join(`${baseDir}/${file.name}`),
           }))
         );
       }
@@ -77,9 +78,9 @@ export async function generateFileTree(directory: string) {
 export const getCode = (fileName: string): Promise<string> => {
   // Docker path: `/workspace/${fileName}`
   const filePath = path.resolve(
-    process.cwd(),
-    'workspace',
-    fileName.replace(/^\//, '')
+    // process.cwd(),
+    //'workspace',
+    `/workspace/${fileName.replace(/^\//, '')}`
   );
 
   console.log('Resolved filePath:', filePath);

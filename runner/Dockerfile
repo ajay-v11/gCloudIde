@@ -1,5 +1,5 @@
-# Use the official Node.js 14 as a parent image
-FROM node:20
+# Use the official Node.js 20 as a parent image
+FROM node:20-alpine
 
 # Set the working directory in the container
 WORKDIR /code
@@ -7,12 +7,15 @@ WORKDIR /code
 # Create the /workspace directory
 RUN mkdir -p /workspace
 
+# Install build tools (Python, make, g++)
+RUN apk add --no-cache bash python3 py3-pip make g++
+
 # Copy package.json and package-lock.json (if available) to the working directory
 COPY package*.json ./
 
 # Install any dependencies
 RUN npm install && \
-npm install -g typescript
+    npm install -g typescript
 
 # Copy the rest of your application's code to the working directory
 COPY . .
@@ -20,7 +23,7 @@ COPY . .
 # Build your app
 # Rebuild node-pty and build the application
 RUN npm rebuild node-pty --update-binary && \
-npm run build
+    npm run build
 
 # Your app binds to port 3001 so you'll use the EXPOSE instruction to have it mapped by the docker daemon
 EXPOSE 3001

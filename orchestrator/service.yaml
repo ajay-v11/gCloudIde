@@ -5,7 +5,7 @@ metadata:
   name: my-k8s-sa
   namespace: default
   annotations:
-    iam.gke.io/gcp-service-account: my-service-name@cloud-ide-444818.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: my-service-name@gen-lang-client-0618662481.iam.gserviceaccount.com
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -22,7 +22,10 @@ spec:
     metadata:
       labels:
         app: service_name
+      annotations:
+        iam.gke.io/gcp-service-account: my-service-name@gen-lang-client-0618662481.iam.gserviceaccount.com
     spec:
+      serviceAccountName: my-k8s-sa
       volumes:
         - name: workspace-volume
           emptyDir: {}
@@ -33,8 +36,7 @@ spec:
           args:
             - |
               mkdir -p /workspace &&
-              gcloud storage cp "gs://basecode/code/service_name/*" /workspace/ &&
-              echo "Resources copied from GCS"
+              gcloud storage cp -r "gs://cloud-user-codes/user-code/service_name/" /workspace/
           volumeMounts:
             - name: workspace-volume
               mountPath: /workspace
@@ -46,7 +48,7 @@ spec:
           volumeMounts:
             - name: workspace-volume
               mountPath: /workspace
-      serviceAccountName: my-k8s-sa
+
 ---
 apiVersion: v1
 kind: Service
@@ -65,6 +67,10 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: service_name
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
+    nginx.ingress.kubernetes.io/enable-websocket: 'true'
 spec:
   ingressClassName: nginx
   rules:

@@ -14,7 +14,10 @@ export const initWebSockets = (httpServer: HttpServer) => {
   });
 
   // Docker path: '/workspace'
-  const basePath = path.resolve(process.cwd(), 'workspace');
+
+  //const basePath = path.resolve(process.cwd(), 'workspace');
+  const basePath = path.resolve('/workspace');
+  const workspacePath = path.resolve('/workspace');
 
   // Ensure workspace exists with restricted permissions
   if (!fs.existsSync(basePath)) {
@@ -45,7 +48,39 @@ export const initWebSockets = (httpServer: HttpServer) => {
 
     ptyProcess.onData((data: string) => socket.emit('terminal:data', data));
 
-    socket.on('terminal:write', (data) => ptyProcess.write(data));
+    //to use the
+    socket.on('terminal:write', (data) => {
+      const command = data.trim();
+
+      // Check if the command is a cd command
+      if (command.startsWith('cd ')) {
+        const targetDir = command.slice(3).trim();
+        let fullPath;
+
+        // Handle absolute paths
+        if (targetDir.startsWith('/')) {
+          fullPath = targetDir;
+        } else {
+          // For relative paths, we need to get the current directory
+          // This is tricky since we don't track it, but we can
+          // make an educated guess based on the workspacePath
+          fullPath = path.resolve(workspacePath, targetDir);
+        }
+
+        // Ensure the path stays within workspace
+        if (!fullPath.startsWith(workspacePath)) {
+          socket.emit('terminal:data', 'Cannot navigate outside workspace\r\n');
+          // Send a new prompt
+          socket.emit('terminal:data', 'workspace> ');
+          return;
+        }
+      }
+
+      // Forward the command to the terminal
+      ptyProcess.write(data);
+    });
+
+    //terminal resizing
     socket.on('terminal:resize', ({cols, rows}) => {
       if (typeof cols === 'number' && typeof rows === 'number') {
         ptyProcess.resize(cols, rows);

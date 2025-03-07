@@ -41,7 +41,7 @@ export const createNewProject = async (
 
     //uncomment the below line to copyfolders
 
-    await copyGCSFolder(`base/${lang}`, `code/${replId}`);
+    await copyGCSFolder(`base-code/${lang}`, `user-code/${replId}`);
 
     res.status(200).json({
       message: 'Project created successfully',
