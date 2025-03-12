@@ -7,13 +7,24 @@ WORKDIR /code
 # Create the /workspace directory
 RUN mkdir -p /workspace
 
-# Install build tools (Python, make, g++)
-RUN apk add --no-cache bash python3 py3-pip make g++
+# Install system-level dependencies
+RUN apk add --no-cache bash python3 py3-pip make g++ openjdk11 maven
 
-# Copy package.json and package-lock.json (if available) to the working directory
+# Create a virtual environment
+RUN python3 -m venv /venv
+
+# Activate the virtual environment and install Python packages
+RUN . /venv/bin/activate && \
+    pip install --upgrade pip && \
+    pip install numpy pandas
+
+# Set the virtual environment as the default Python environment
+ENV PATH="/venv/bin:$PATH"
+
+# Copy only package.json and package-lock.json first to leverage Docker layer caching
 COPY package*.json ./
 
-# Install any dependencies
+# Install Node.js dependencies
 RUN npm install && \
     npm install -g typescript
 
@@ -25,8 +36,8 @@ COPY . .
 RUN npm rebuild node-pty --update-binary && \
     npm run build
 
-# Your app binds to port 3001 so you'll use the EXPOSE instruction to have it mapped by the docker daemon
+# Expose port 3001
 EXPOSE 3001
 
-# Define the command to run your app using CMD which defines your runtime
-CMD [ "npm", "start" ]
+# Start the application
+CMD ["npm", "start"]

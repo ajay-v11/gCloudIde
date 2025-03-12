@@ -26,6 +26,8 @@ interface CloudIDEProps {
   handleEditorChange: (value: string | undefined) => void;
   code: string | undefined;
   selectedFile: string | null;
+  isRunning: boolean;
+  handleRun: () => void;
   isSaved: boolean;
   error?: string | null;
 }
@@ -37,6 +39,8 @@ const MyEditor: React.FC<CloudIDEProps> = ({
   code,
   selectedFile,
   isSaved,
+  isRunning,
+  handleRun,
   error,
 }) => {
   const extensionMap: Record<string, string> = {
@@ -93,7 +97,12 @@ const MyEditor: React.FC<CloudIDEProps> = ({
               ) : (
                 <span className='text-red-500'>Unsaved{error}</span>
               )}
-              <button className='bg-green-700 w-20 h-8 rounded-lg'>Run</button>
+              <button
+                className='bg-green-700 w-20 h-8 rounded-lg'
+                onClick={handleRun}
+                disabled={!selectedFile || isRunning}>
+                {isRunning ? 'Running...' : 'Run'}
+              </button>
             </div>
             <div className='h-[calc(100%-3rem)] rounded-lg border border-slate-600 text-white'>
               {selectedFile ? (

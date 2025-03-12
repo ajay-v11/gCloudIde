@@ -75,6 +75,26 @@ const deleteResources = async (
   await new Promise((resolve) => setTimeout(resolve, 2000));
 };
 
+// Periodically check for expired sessions
+const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+setInterval(() => {
+  const now = new Date();
+  for (const [replId, session] of activeSessions.entries()) {
+    const inactiveDuration = now.getTime() - session.lastActivityTime.getTime();
+    if (inactiveDuration > INACTIVITY_TIMEOUT) {
+      // Delete resources for expired session
+      deleteResources(replId, 'default')
+        .then(() => {
+          activeSessions.delete(replId);
+          console.log(`Deleted resources for expired session: ${replId}`);
+        })
+        .catch((error) => {
+          console.error(`Failed to delete resources for ${replId}:`, error);
+        });
+    }
+  }
+}, 60 * 1000); // Check every minute
+
 const createResources = async (manifests: any[], namespace: string) => {
   for (const manifest of manifests) {
     if (manifest.kind === 'ServiceAccount') continue;
@@ -116,7 +136,10 @@ app.post('/start', async (req, res) => {
     await createResources(kubeManifests, namespace);
 
     // Track the new session
-    activeSessions.set(replId, {userId, startTime: new Date()});
+    activeSessions.set(replId, {
+      userId,
+      lastActivityTime: new Date(), // Initialize last activity time
+    });
 
     res.status(200).send({
       message: 'Resources created successfully',
@@ -166,6 +189,29 @@ app.post('/stop', async (req, res) => {
       message: 'Failed to delete resources',
       error: error.message,
       details: error.response?.body?.message || error.response?.statusMessage,
+    });
+  }
+});
+
+app.post('/activity', async (req, res) => {
+  const {replId} = req.body;
+
+  try {
+    // Update the last activity time for the session
+    if (activeSessions.has(replId)) {
+      const session = activeSessions.get(replId);
+      session.lastActivityTime = new Date();
+      activeSessions.set(replId, session);
+    }
+
+    res.status(200).send({
+      message: 'Activity updated successfully',
+    });
+  } catch (error) {
+    console.error('Failed to update activity:', error);
+    res.status(500).send({
+      message: 'Failed to update activity',
+      error: error.message,
     });
   }
 });
