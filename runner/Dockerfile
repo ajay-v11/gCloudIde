@@ -7,10 +7,22 @@ WORKDIR /code
 # Create the /workspace directory
 RUN mkdir -p /workspace
 
-# Install system-level dependencies
-RUN apk add --no-cache bash python3 py3-pip make g++ openjdk11 maven
+# Install system-level dependencies, including PHP CLI
+RUN apk add --no-cache \
+    bash \
+    python3 \
+    py3-pip \
+    make \
+    g++ \
+    openjdk11 \
+    maven \
+    php-cli \
+    php-phar \
+    php-mbstring \
+    php-xml \
+    php-openssl
 
-# Create a virtual environment
+# Create a virtual environment for Python
 RUN python3 -m venv /venv
 
 # Activate the virtual environment and install Python packages
@@ -32,12 +44,11 @@ RUN npm install && \
 COPY . .
 
 # Build your app
-# Rebuild node-pty and build the application
 RUN npm rebuild node-pty --update-binary && \
     npm run build
 
-# Expose port 3001
+# Expose port 3001 for your Node.js app
 EXPOSE 3001
 
-# Start the application
+# Set the default command
 CMD ["npm", "start"]

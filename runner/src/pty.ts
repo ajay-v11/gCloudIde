@@ -19,7 +19,7 @@ export const createPtyProcess = () => {
   });
 
   // Send initial commands to set the prompt and current directory
-  ptyProcess.write('PS1="workspace> "\r');
+  ptyProcess.write('PS1="workspace$"\r');
   ptyProcess.write(`cd "${workspacePath}"\r`);
 
   return ptyProcess;

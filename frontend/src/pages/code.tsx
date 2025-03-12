@@ -12,6 +12,11 @@ interface FileChangePayLoad {
   content: string;
 }
 
+interface HtmlPreviewData {
+  html: string;
+  css: string;
+}
+
 const CODE_AUTO_SAVE_DELAY = 3000; // 3 seconds
 
 const CodeEditor = () => {
@@ -24,6 +29,11 @@ const CodeEditor = () => {
   const [isRunning, setIsRunning] = useState(false); // Track if the code is running
   const [searchParams] = useSearchParams();
   const replId = searchParams.get('replid') ?? '';
+
+  const [output, setOutput] = useState<string>('');
+  const [plotImages, setPlotImages] = useState<string[]>([]);
+  const [htmlPreview, setHtmlPreview] = useState<HtmlPreviewData | null>(null);
+
   console.log('replid from the code', replId);
 
   useEffect(() => {
@@ -40,10 +50,24 @@ const CodeEditor = () => {
         setCode(receivedCode);
         setError(null);
       },
+      'terminalOutput:data': (receivedOutput: string) => {
+        console.log('Received terminal output:', receivedOutput); // Log received output
+        setOutput((prevOutput) => prevOutput + receivedOutput);
+      },
       error: (err: {message: string}) => setError(err.message),
       'terminal:data': (data: string) => {
         // Handle terminal output (e.g., display it in a terminal component)
         console.log('Terminal output:', data);
+      },
+      'plot:image': (plotImage: string) => {
+        setPlotImages((prev) => [...prev, plotImage]);
+      },
+      'html:preview': (data: HtmlPreviewData) => {
+        console.log('Received HTML preview:', data);
+        setHtmlPreview(data);
+        // Clear other outputs when showing HTML preview
+        setOutput('HTML preview loaded.');
+        setPlotImages([]);
       },
     };
 
@@ -70,6 +94,8 @@ const CodeEditor = () => {
   // Handle file selection
   const handleFileSelect = (fileName: string) => {
     setSelectedFile(fileName);
+    // Clear HTML preview when selecting a new file
+    setHtmlPreview(null);
     socketManager.emit('file:selected', fileName);
   };
 
@@ -106,25 +132,38 @@ const CodeEditor = () => {
     setIsRunning(true);
     setError(null);
 
+    // Clear previous output, plots, and HTML preview when running new code
+    setOutput('');
+    setPlotImages([]);
+    setHtmlPreview(null);
+
     // Emit the "file:run" event to the backend
     socketManager.emit('file:run', selectedFile);
 
     // Reset the running state after a delay (optional)
     setTimeout(() => setIsRunning(false), 5000); // Adjust the delay as needed
   };
+  useEffect(() => {
+    socketManager.emit('init', replId);
+  }, []);
 
   return (
-    <MyEditor
-      fileTree={fileTree}
-      handleEditorChange={handleEditorChange}
-      handleFileSelect={handleFileSelect}
-      code={code}
-      selectedFile={selectedFile}
-      isSaved={isSaved}
-      error={error}
-      handleRun={handleRun}
-      isRunning={isRunning}
-    />
+    <>
+      <MyEditor
+        fileTree={fileTree}
+        handleEditorChange={handleEditorChange}
+        handleFileSelect={handleFileSelect}
+        code={code}
+        selectedFile={selectedFile}
+        isSaved={isSaved}
+        error={error}
+        handleRun={handleRun}
+        isRunning={isRunning}
+        output={output}
+        plotImages={plotImages}
+        htmlPreview={htmlPreview}
+      />
+    </>
   );
 };
 

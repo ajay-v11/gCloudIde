@@ -20,6 +20,11 @@ interface FileNode {
   [key: string]: FileNode | null; // Directory with children or a file (null)
 }
 
+interface HtmlPreviewData {
+  html: string;
+  css: string;
+}
+
 interface CloudIDEProps {
   fileTree: FileNode | null;
   handleFileSelect: (path: string) => void;
@@ -30,6 +35,9 @@ interface CloudIDEProps {
   handleRun: () => void;
   isSaved: boolean;
   error?: string | null;
+  output: string;
+  plotImages: string[];
+  htmlPreview: HtmlPreviewData | null;
 }
 
 const MyEditor: React.FC<CloudIDEProps> = ({
@@ -42,10 +50,12 @@ const MyEditor: React.FC<CloudIDEProps> = ({
   isRunning,
   handleRun,
   error,
+  output,
+  plotImages,
+  htmlPreview,
 }) => {
   const extensionMap: Record<string, string> = {
     js: 'javascript',
-    ts: 'typescript',
     py: 'python',
     java: 'java',
     cpp: 'cpp',
@@ -74,6 +84,23 @@ const MyEditor: React.FC<CloudIDEProps> = ({
     }
   }, [selectedFile, currentLanguage]);
 
+  // Create HTML document with embedded CSS for the preview
+  const getHtmlPreview = () => {
+    if (!htmlPreview) return null;
+
+    const combinedHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>${htmlPreview.css}</style>
+        </head>
+        <body>${htmlPreview.html}</body>
+      </html>
+    `;
+
+    return combinedHtml;
+  };
+
   return (
     <div className='h-screen bg-black'>
       <PanelGroup direction='horizontal' className='p-2'>
@@ -95,7 +122,12 @@ const MyEditor: React.FC<CloudIDEProps> = ({
               {isSaved ? (
                 <span className='text-green-500'>Saved</span>
               ) : (
-                <span className='text-red-500'>Unsaved{error}</span>
+                <div>
+                  <span className='text-red-500'>Unsaved{error}</span>
+                  <span className='text-xs text-slate-200 ml-3'>
+                    Changes will be save after every 3 seconds
+                  </span>
+                </div>
               )}
               <button
                 className='bg-green-700 w-20 h-8 rounded-lg'
@@ -108,7 +140,6 @@ const MyEditor: React.FC<CloudIDEProps> = ({
               {selectedFile ? (
                 <Editor
                   language={currentLanguage}
-                  defaultValue='// your changes will be automatically save after 3 seconds'
                   onChange={handleEditorChange}
                   theme='vs-dark'
                   value={code}
@@ -138,13 +169,38 @@ const MyEditor: React.FC<CloudIDEProps> = ({
           <PanelGroup direction='vertical'>
             <Panel>
               <div className='h-full'>
-                <h1 className='text-white mb-1'>Output</h1>
-                <div className='h-[calc(100%-2rem)] bg-slate-200 rounded-md border border-slate-600'>
-                  <iframe
-                    width='100%'
-                    height='100%'
-                    src={`/java-vertical.svg`}
-                  />
+                <h1 className='text-black mb-1'>Output</h1>
+                <div className='h-[calc(100%-2rem)] bg-slate-200 rounded-md border border-slate-600 overflow-auto p-2'>
+                  {/* HTML preview */}
+                  {htmlPreview && (
+                    <div className='h-full w-full bg-white rounded overflow-hidden'>
+                      <iframe
+                        srcDoc={getHtmlPreview()}
+                        title='HTML Preview'
+                        className='w-full h-full border-none'
+                        sandbox='allow-scripts'
+                      />
+                    </div>
+                  )}
+
+                  {/* Text output (show only if no HTML preview) */}
+                  {!htmlPreview && output && (
+                    <pre className='font-mono text-sm'>{output}</pre>
+                  )}
+
+                  {/* Plot images (show only if no HTML preview) */}
+                  {!htmlPreview && plotImages.length > 0 && (
+                    <div className='mt-2'>
+                      {plotImages.map((plotImage, index) => (
+                        <img
+                          key={index}
+                          src={`data:image/png;base64,${plotImage}`}
+                          alt={`Plot ${index + 1}`}
+                          className='max-w-full my-2'
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </Panel>

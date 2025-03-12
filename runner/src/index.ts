@@ -12,8 +12,8 @@ const httpServer = createServer(app);
 
 initWebSockets(httpServer);
 
-app.get('/health', (req, res) => {
-  res.send('Server is running');
+app.get('/healthz', (req, res) => {
+  res.status(200).send('OK');
 });
 
 const port = process.env.PORT || 3001;

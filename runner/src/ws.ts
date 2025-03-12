@@ -14,19 +14,30 @@ const executeCommand = (command: string, socket: any): Promise<string> => {
   return new Promise((resolve, reject) => {
     const childProcess = exec(command, (error, stdout, stderr) => {
       if (error) {
-        socket.emit('terminal:data', `Error: ${error.message}\r\n`);
+        socket.emit('terminalOutput:data', `Error: ${error.message}\r\n`);
         reject(error);
       }
       if (stderr) {
-        socket.emit('terminal:data', `Stderr: ${stderr}\r\n`);
+        socket.emit('terminalOutput:data', `Stderr: ${stderr}\r\n`);
       }
-      socket.emit('terminal:data', `Output: ${stdout}\r\n`);
+      socket.emit('terminalOutput:data', `Output: ${stdout}\r\n`);
+
+      // Check if the output contains a plot file
+      const plotMatch = stdout.match(/Plot saved to: (.+\.(png|jpg|jpeg|gif))/);
+      if (plotMatch) {
+        const plotFilePath = plotMatch[1];
+        const plotImage = fs.readFileSync(plotFilePath, {encoding: 'base64'});
+        socket.emit('plot:image', plotImage);
+      }
       resolve(stdout);
     });
 
     // Handle process exit
     childProcess.on('exit', (code) => {
-      socket.emit('terminal:data', `Process exited with code ${code}\r\n`);
+      socket.emit(
+        'terminalOutput:data',
+        `Process exited with code ${code}\r\n`
+      );
     });
   });
 };
@@ -41,6 +52,7 @@ export const initWebSockets = (httpServer: HttpServer) => {
   //const basePath = path.resolve(process.cwd(), 'workspace');
   const basePath = path.resolve('/workspace');
   const workspacePath = path.resolve('/workspace');
+  let replId;
 
   // Ensure workspace exists with restricted permissions
   if (!fs.existsSync(basePath)) {
@@ -65,6 +77,14 @@ export const initWebSockets = (httpServer: HttpServer) => {
 
   io.on('connection', async (socket) => {
     console.log('User connected', socket.id);
+
+    socket.on('init', (params) => {
+      replId = params;
+      console.log('recieved replId:-', replId);
+
+      // You can now use these parameters in your backend logic
+    });
+
     const ptyProcess = createPtyProcess();
 
     socket.emit('terminal:data', 'Welcome to the terminal!\r\n');
@@ -141,7 +161,7 @@ export const initWebSockets = (httpServer: HttpServer) => {
         }
 
         await saveFile(filePath, content);
-        //await saveToGCS('4', filePath, content);
+        await saveToGCS(`user-code/${replId}`, filePath, content);
         socket.emit('file:save:success');
       } catch (err) {
         socket.emit('error', {message: 'Unable to update file'});
@@ -159,6 +179,66 @@ export const initWebSockets = (httpServer: HttpServer) => {
           throw new Error('Invalid file path');
         }
 
+        // For HTML files, we'll send the HTML content to be rendered in an iframe
+        if (fileName.endsWith('.html')) {
+          try {
+            const htmlContent = fs.readFileSync(filePath, 'utf8');
+
+            // Check if there are associated CSS files
+            const baseName = path.basename(fileName, '.html');
+            const cssFilePath = path.join(
+              path.dirname(filePath),
+              `${baseName}.css`
+            );
+
+            let cssContent = '';
+            if (fs.existsSync(cssFilePath)) {
+              cssContent = fs.readFileSync(cssFilePath, 'utf8');
+            }
+
+            // Send HTML and CSS content to the client
+            socket.emit('html:preview', {html: htmlContent, css: cssContent});
+            socket.emit('terminalOutput:data', 'HTML preview loaded.\r\n');
+            return;
+          } catch (err) {
+            socket.emit('error', {message: 'Failed to load HTML content'});
+            return;
+          }
+        }
+
+        // For CSS files, check if there's an associated HTML file to preview together
+        if (fileName.endsWith('.css')) {
+          try {
+            const baseName = path.basename(fileName, '.css');
+            const htmlFilePath = path.join(
+              path.dirname(filePath),
+              `${baseName}.html`
+            );
+
+            // If HTML file exists, run it instead
+            if (fs.existsSync(htmlFilePath)) {
+              const htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
+              const cssContent = fs.readFileSync(filePath, 'utf8');
+
+              socket.emit('html:preview', {html: htmlContent, css: cssContent});
+              socket.emit(
+                'terminalOutput:data',
+                'HTML preview with CSS loaded.\r\n'
+              );
+              return;
+            } else {
+              socket.emit(
+                'terminalOutput:data',
+                'No associated HTML file found. CSS files need an HTML file to be previewed.\r\n'
+              );
+              return;
+            }
+          } catch (err) {
+            socket.emit('error', {message: 'Failed to load CSS/HTML content'});
+            return;
+          }
+        }
+
         let command;
 
         // Handle different file types
@@ -168,6 +248,8 @@ export const initWebSockets = (httpServer: HttpServer) => {
         } else if (fileName.endsWith('.js')) {
           // JavaScript (interpreted)
           command = `node ${filePath}`;
+        } else if (fileName.endsWith('.php')) {
+          command = `php ${filePath}`;
         } else if (fileName.endsWith('.java')) {
           // Java (compiled)
           const className = path.basename(fileName, '.java');
