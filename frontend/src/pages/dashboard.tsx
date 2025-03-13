@@ -1,9 +1,9 @@
 import axios from 'axios';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 
 const Dashboard = () => {
-  const projects = ['Project Alpha', 'Project Beta', 'Project Gamma'];
+  const [projects, setProjects] = useState([]);
   const languages = [
     {
       name: 'Javascript',
@@ -44,10 +44,9 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDisabled, setIsDisable] = useState(false);
   const navigate = useNavigate();
+  const jwt = localStorage.getItem('token');
 
   async function handleSubmit() {
-    const jwt = localStorage.getItem('token');
-
     setIsLoading(true);
     setIsDisable(true);
     try {
@@ -88,6 +87,42 @@ const Dashboard = () => {
       setIsLoading(false);
     }
   }
+
+  async function fetchUserProjects() {
+    try {
+      const response = await axios.get(
+        'http://localhost:3000/api/v1/project/userProjects',
+        {
+          headers: {Authorization: jwt},
+        }
+      );
+
+      console.log(response);
+      const repls = response.data.recentTitles;
+
+      setProjects(repls);
+    } catch (err) {
+      console.log('Error fetching projects:', err);
+      if (axios.isAxiosError(err)) {
+        const {status, data} = err.response || {};
+        if (status === 404) {
+          setErrorMessage('User not found. Please sign in again.');
+        } else if (status === 403) {
+          setErrorMessage(`${data?.message}, Please sign in again`);
+        } else {
+          setErrorMessage('An unexpected error occurred. Please try again.');
+        }
+      } else {
+        setErrorMessage('An unexpected error occurred.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchUserProjects();
+  }, []);
 
   return (
     <div className='flex min-h-screen [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)] text-white'>

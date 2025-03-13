@@ -161,7 +161,15 @@ export const initWebSockets = (httpServer: HttpServer) => {
         }
 
         await saveFile(filePath, content);
-        await saveToGCS(`user-code/${replId}`, filePath, content);
+        try {
+          await saveToGCS(`user-code/${replId}`, filePath, content);
+        } catch (gcsError) {
+          console.error('GCS save failed but continuing:', gcsError);
+          // Optionally notify the client but don't fail the whole operation
+          socket.emit('warning', {
+            message: 'File saved locally but cloud backup failed',
+          });
+        }
         socket.emit('file:save:success');
       } catch (err) {
         socket.emit('error', {message: 'Unable to update file'});
