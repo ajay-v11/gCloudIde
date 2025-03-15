@@ -28,7 +28,7 @@ RUN python3 -m venv /venv
 # Activate the virtual environment and install Python packages
 RUN . /venv/bin/activate && \
     pip install --upgrade pip && \
-    pip install numpy pandas
+    pip install numpy pandas matplotlib
 
 # Set the virtual environment as the default Python environment
 ENV PATH="/venv/bin:$PATH"

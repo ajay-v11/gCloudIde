@@ -9,7 +9,6 @@ import path from 'path';
 import fs from 'fs';
 import {exec} from 'child_process';
 
-// Helper function to execute a command and return stdout/stderr
 const executeCommand = (command: string, socket: any): Promise<string> => {
   return new Promise((resolve, reject) => {
     const childProcess = exec(command, (error, stdout, stderr) => {
@@ -22,13 +21,23 @@ const executeCommand = (command: string, socket: any): Promise<string> => {
       }
       socket.emit('terminalOutput:data', `Output: ${stdout}\r\n`);
 
-      // Check if the output contains a plot file
-      const plotMatch = stdout.match(/Plot saved to: (.+\.(png|jpg|jpeg|gif))/);
-      if (plotMatch) {
-        const plotFilePath = plotMatch[1];
-        const plotImage = fs.readFileSync(plotFilePath, {encoding: 'base64'});
-        socket.emit('plot:image', plotImage);
+      // Check for multiple plot files in the output
+      const plotMatches = stdout.matchAll(
+        /Plot saved to: (.+\.(png|jpg|jpeg|gif))/g
+      );
+      for (const match of plotMatches) {
+        const plotFilePath = match[1];
+        try {
+          const plotImage = fs.readFileSync(plotFilePath, {encoding: 'base64'});
+          socket.emit('plot:image', plotImage);
+        } catch (readError) {
+          socket.emit(
+            'terminalOutput:data',
+            `Failed to read plot file: ${plotFilePath}\r\n`
+          );
+        }
       }
+
       resolve(stdout);
     });
 
