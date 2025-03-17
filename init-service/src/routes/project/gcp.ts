@@ -2,38 +2,37 @@ import {Storage} from '@google-cloud/storage';
 import path from 'path';
 
 const storage = new Storage({
+  keyFilename: './gen-lang-client-0618662481-93d790856fd8.json',
   projectId: process.env.GCP_PROJECT_ID,
-  keyFilename: path.resolve(
-    __dirname,
-    '../../../gen-lang-client-0618662481-ad19f4fba79f.json'
-  ), // Path to your GCP service account key
 });
 
 const bucketName = process.env.GCS_BUCKET ?? '';
+console.log('the bucketname is', process.env.GCS_BUCKET);
 
-export async function copyGCSFolder(
-  sourcePrefix: string,
-  destinationPrefix: string,
-  pageToken?: string
-): Promise<void> {
+export const copyGCSFolder = async (
+  sourceFolderPath: string,
+  destinationFolderPath: string
+) => {
   try {
+    // Get bucket from environment variable
+    const bucket = storage.bucket(process.env.GCS_BUCKET || '');
+
     // List objects in the source folder
-    const [files, nextQuery] = await storage.bucket(bucketName).getFiles({
-      prefix: sourcePrefix,
-      pageToken,
+    const [files, nextQuery] = await bucket.getFiles({
+      prefix: sourceFolderPath,
     });
 
-    console.log(sourcePrefix);
-    console.log(destinationPrefix);
+    console.log(sourceFolderPath);
+    console.log(destinationFolderPath);
 
     // Copy each file
     await Promise.all(
       files.map(async (file) => {
         const destinationKey = file.name.replace(
-          sourcePrefix,
-          destinationPrefix
+          sourceFolderPath,
+          destinationFolderPath
         );
-        const destinationFile = storage.bucket(bucketName).file(destinationKey);
+        const destinationFile = bucket.file(destinationKey);
 
         await file.copy(destinationFile);
         console.log(`Copied ${file.name} to ${destinationKey}`);
@@ -42,9 +41,10 @@ export async function copyGCSFolder(
 
     // Handle pagination
     if (nextQuery.pageToken) {
-      await copyGCSFolder(sourcePrefix, destinationPrefix, nextQuery.pageToken);
+      await copyGCSFolder(sourceFolderPath, destinationFolderPath);
     }
   } catch (error) {
     console.error('Error copying folder:', error);
+    throw error;
   }
-}
+};
