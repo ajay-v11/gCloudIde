@@ -2,6 +2,7 @@ import {useEffect, useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
 import CodeEditor from './code';
 import axios from 'axios';
+import Loading from '../components/loading';
 
 export const CodingPage = () => {
   const [isBooting, setIsBooting] = useState(true);
@@ -80,7 +81,7 @@ export const CodingPage = () => {
   if (isBooting) {
     return (
       <>
-        <div>Booting...</div>
+        <Loading />
       </>
     );
   }

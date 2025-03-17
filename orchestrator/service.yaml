@@ -47,7 +47,7 @@ spec:
               memory: '512Mi'
       containers:
         - name: runner
-          image: ajayv10/websocket-backend:v1
+          image: ajayv10/websocket-backend:v2
           ports:
             - containerPort: 3001
           volumeMounts:

@@ -22,19 +22,19 @@ const Dashboard = () => {
       description: 'Popular for enterprise applications',
     },
     {
-      name: 'C',
-      logo: <img src='/c-1.svg' className='h-20 w-20'></img>,
-      description: 'Popular for enterprise applications',
+      name: 'Php-cli',
+      logo: <img src='/php-logo.svg' className='h-20 w-20'></img>,
+      description: 'General purpose scripting language',
     },
     {
-      name: 'C++',
+      name: 'Cpp',
       logo: <img src='/c.svg' className='h-20 w-20'></img>,
-      description: 'Popular for enterprise applications',
+      description: 'Popular for high performance applications',
     },
     {
       name: 'Html',
       logo: <img src='/html-1.svg' className='h-20 w-20'></img>,
-      description: 'Popular for enterprise applications',
+      description: 'Popular for static websites',
     },
   ];
 
