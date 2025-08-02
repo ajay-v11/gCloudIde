@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
+import {API} from '../lib/config';
 
 const SignInPage = () => {
   const [email, setEmail] = useState('');
@@ -21,13 +22,10 @@ const SignInPage = () => {
     setIsLoading(true);
     setErrorMessage('');
     try {
-      const response = await axios.post(
-        'http://localhost:3000/api/v1/user/signin',
-        {
-          email: email,
-          password: password,
-        }
-      );
+      const response = await axios.post(`${API.INIT}/api/v1/user/signin`, {
+        email: email,
+        password: password,
+      });
 
       const token = response.data.data.token;
       localStorage.setItem('token', `Bearer ${token}`);

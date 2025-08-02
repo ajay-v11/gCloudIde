@@ -1,9 +1,16 @@
 import axios from 'axios';
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
+import {API} from '../lib/config';
+
+type Project = {
+  replId: string;
+  title: string;
+};
 
 const Dashboard = () => {
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [userId, setUserId] = useState(0);
   const languages = [
     {
       name: 'Javascript',
@@ -51,7 +58,7 @@ const Dashboard = () => {
     setIsDisable(true);
     try {
       const response = await axios.post(
-        ' http://localhost:3000/api/v1/project/new',
+        `${API.INIT}/api/v1/project/new`,
         {
           title: title,
           language: selectedLanguage,
@@ -60,10 +67,9 @@ const Dashboard = () => {
           headers: {Authorization: jwt},
         }
       );
-      console.log(response);
+
       const replId = response.data.replid;
       const userId = response.data.userid;
-      console.log(replId, userId);
       navigate(`/code/?replid=${replId}&userid=${userId}`);
     } catch (err) {
       console.log('there was an errror', err);
@@ -91,15 +97,16 @@ const Dashboard = () => {
   async function fetchUserProjects() {
     try {
       const response = await axios.get(
-        'http://localhost:3000/api/v1/project/userProjects',
+        `${API.INIT}/api/v1/project/userProjects`,
         {
           headers: {Authorization: jwt},
         }
       );
 
-      console.log(response);
-      const repls = response.data.recentTitles;
-
+      console.log('recent projects', response);
+      const repls = response.data.recentProjects;
+      const userId = response.data.userId;
+      setUserId(userId);
       setProjects(repls);
     } catch (err) {
       console.log('Error fetching projects:', err);
@@ -134,8 +141,11 @@ const Dashboard = () => {
           {projects.map((project, index) => (
             <li
               key={index}
-              className='p-2 bg-black cursor-pointer text-slate-500 hover:text-white'>
-              {project}
+              className='p-2 bg-black cursor-pointer text-slate-500 hover:text-white'
+              onClick={() => {
+                navigate(`/code/?replid=${project.replId}&userid=${userId}`);
+              }}>
+              {project.title}
             </li>
           ))}
         </ul>

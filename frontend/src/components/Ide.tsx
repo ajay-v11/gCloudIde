@@ -86,7 +86,7 @@ const MyEditor: React.FC<CloudIDEProps> = ({
 
   // Create HTML document with embedded CSS for the preview
   const getHtmlPreview = () => {
-    if (!htmlPreview) return null;
+    if (!htmlPreview) return undefined;
 
     const combinedHtml = `
       <!DOCTYPE html>

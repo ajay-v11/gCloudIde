@@ -23,7 +23,7 @@ const CodeEditor = () => {
   const [code, setCode] = useState<string | undefined>();
   const [fileTree, setFileTree] = useState<FileNode | null>(null); // Set to null initially
   const [selectedFile, setSelectedFile] = useState<string>('');
-  const [selectedFileContent, setSelectedFileContent] = useState('');
+  const [selectedFileContent] = useState('');
   const [isSaved, setIsSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false); // Track if the code is running
@@ -37,8 +37,6 @@ const CodeEditor = () => {
   console.log('replid from the code', replId);
 
   useEffect(() => {
-    // Connect if not already connected
-    const socket = socketManager.connect('replId');
     // Setup event handlers
     const eventHandlers = {
       'file:tree': (data: FileNode | null) => setFileTree(data),

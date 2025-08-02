@@ -1,5 +1,6 @@
 // socketManager.ts
 import io, {Socket} from 'socket.io-client';
+import {getSocketUrl} from './config';
 
 class SocketManager {
   private static instance: SocketManager;
@@ -17,9 +18,8 @@ class SocketManager {
 
   connect(replId: string): Socket {
     if (!this.socket) {
-      //io(`http://localhost:3001`
-      // io(`http://${replId}.cloudide.site`
-      this.socket = io(`http://${replId}.cloudide.site`, {
+      const url = getSocketUrl(replId);
+      this.socket = io(url, {
         transports: ['websocket'],
         reconnection: true,
         reconnectionAttempts: 5,

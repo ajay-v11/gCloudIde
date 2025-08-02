@@ -3,10 +3,11 @@ import {useSearchParams} from 'react-router-dom';
 import CodeEditor from './code';
 import axios from 'axios';
 import Loading from '../components/loading';
+import {API} from '../lib/config';
 
 export const CodingPage = () => {
   const [isBooting, setIsBooting] = useState(true);
-  const [status, setStatus] = useState(null);
+
   const [searchParams] = useSearchParams();
   const replId = searchParams.get('replid') ?? '';
   const userId = searchParams.get('userid') ?? '';
@@ -17,28 +18,21 @@ export const CodingPage = () => {
     const startProject = async () => {
       try {
         // Start the project by making a POST request to the backend
-        await fetch(`http://localhost:3002/start`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({replId, userId}),
-        });
+        await axios.post(`${API.ORCHESTRATOR}/start`, {replId, userId});
 
         // Start polling for status
         const intervalId = setInterval(async () => {
           try {
-            const response = await fetch(
-              `http://localhost:3002/stats/${replId}`
+            const response = await axios.get(
+              `${API.ORCHESTRATOR}/stats/${replId}`
             );
-            const data = await response.json();
-            const {deploymentStatus, pods} = data;
+            const data = response.data;
+            const {deploymentStatus} = data;
 
             // Check if the deployment is ready
             if (deploymentStatus.readyReplicas > 0) {
               clearInterval(intervalId); // Stop polling
               setIsBooting(false); // Set booting to false
-              setStatus({deploymentStatus, pods}); // Set the status
             }
           } catch (error) {
             console.error('Error fetching stats:', error);
@@ -57,7 +51,7 @@ export const CodingPage = () => {
     // Cleanup function to delete resources when the tab is closed
     const handleTabClose = () => {
       const data = JSON.stringify({replId});
-      navigator.sendBeacon(`http://localhost:3002/stop`, data);
+      navigator.sendBeacon(`${API.ORCHESTRATOR}/stop`, data);
       console.log('Sent beacon to delete resources');
     };
 
@@ -72,7 +66,7 @@ export const CodingPage = () => {
 
   useEffect(() => {
     const activityInterval = setInterval(() => {
-      axios.post(`http://localhost:3002/activity`, {replId});
+      axios.post(`${API.ORCHESTRATOR}/activity`, {replId});
     }, 5 * 60 * 1000); // Call every 5 minutes
 
     return () => clearInterval(activityInterval);
@@ -86,5 +80,5 @@ export const CodingPage = () => {
     );
   }
 
-  return <CodeEditor status={status} />;
+  return <CodeEditor />;
 };
