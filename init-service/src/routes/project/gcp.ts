@@ -2,7 +2,6 @@ import {Storage} from '@google-cloud/storage';
 import path from 'path';
 
 const storage = new Storage({
-  keyFilename: './gen-lang-client-0618662481-93d790856fd8.json',
   projectId: process.env.GCP_PROJECT_ID,
 });
 

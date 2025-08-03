@@ -5,7 +5,7 @@ metadata:
   name: my-k8s-sa
   namespace: default
   annotations:
-    iam.gke.io/gcp-service-account: my-service-name@gen-lang-client-0618662481.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: cloud-ide-storage@cloud-ide-467613.iam.gserviceaccount.com
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -34,7 +34,7 @@ spec:
           args:
             - |
               mkdir -p /workspace &&
-              gcloud storage cp -r "gs://cloud-user-codes/user-code/service_name/*" /workspace/
+              gcloud storage cp -r "gs://user-code-bucket/user-code/service_name/*" /workspace/
           volumeMounts:
             - name: workspace-volume
               mountPath: /workspace
@@ -47,7 +47,7 @@ spec:
               memory: '512Mi'
       containers:
         - name: runner
-          image: ajayv10/websocket-backend:v2
+          image: ajayv10/websocket-backend:latest
           ports:
             - containerPort: 3001
           volumeMounts:
@@ -55,9 +55,9 @@ spec:
               mountPath: /workspace
           env:
             - name: GCP_PROJECT_ID
-              value: 'gen-lang-client-0618662481'
+              value: 'cloud-ide-467613'
             - name: GCS_BUCKET
-              value: 'cloud-user-codes'
+              value: 'user-code-bucket'
           resources:
             requests:
               cpu: '200m'
@@ -96,11 +96,16 @@ kind: Ingress
 metadata:
   name: service_name
   annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
     nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
     nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
     nginx.ingress.kubernetes.io/enable-websocket: 'true'
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - service_name.cloudide.site
+      secretName: wildcard-cloudide-tls
   rules:
     - host: service_name.cloudide.site
       http:

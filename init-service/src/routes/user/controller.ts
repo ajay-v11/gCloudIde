@@ -27,7 +27,6 @@ export const signup = async (req: Request, res: Response): Promise<any> => {
   // Validate request body
   const result = signupBody.safeParse(body);
   if (!result.success) {
-    console.log('Validation errors', result.error.errors);
     return res.status(400).json({
       message: 'Validation errors',
       errors: result.error.errors,

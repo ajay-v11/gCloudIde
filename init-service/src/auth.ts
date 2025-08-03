@@ -13,7 +13,6 @@ const authenticateUser = async (
   res: Response,
   next: NextFunction
 ): Promise<any> => {
-  console.log('inside the auth');
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -26,7 +25,6 @@ const authenticateUser = async (
 
   try {
     const decoded = jwt.verify(token, secret) as {userId: number};
-    console.log(decoded);
 
     (req as any).userId = decoded.userId;
     next();

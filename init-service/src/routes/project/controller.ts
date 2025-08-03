@@ -3,6 +3,10 @@ import zod from 'zod';
 import prisma from '../../prisma-client';
 import {copyGCSFolder} from './gcp';
 
+if (!process.env.GCS_BUCKET) {
+  throw new Error('GCS_BUCKET is not defined in environment variables');
+}
+
 const projectSchema = zod.object({
   title: zod.string().min(1, {message: 'name should not be empty'}),
   language: zod.string().min(1, {message: 'Language should not be empty'}),
@@ -26,6 +30,9 @@ export const createNewProject = async (
   }
 
   try {
+    console.log('GCS Bucket:', process.env.GCS_BUCKET);
+    console.log('GCP Project ID:', process.env.GCP_PROJECT_ID);
+
     const newRepl = await prisma.repl.create({
       data: {
         title: body.title,
@@ -49,7 +56,7 @@ export const createNewProject = async (
       userid: userId,
     });
   } catch (err) {
-    console.log('Internal server error', err);
+    console.error('Error in createProject:', err);
     return res.status(500).json({
       message: 'Internal sever  errro',
     });

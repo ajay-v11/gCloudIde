@@ -17,7 +17,8 @@ export const getUserProject = async (
           orderBy: {createdAt: 'desc'}, // Sort by creation date (newest first)
           take: 7, // Limit to the 7 most recent repls
           select: {
-            title: true, // Only fetch the title
+            title: true, // Fetch the title
+            id: true, // Include the ID
           },
         },
       },
@@ -27,11 +28,15 @@ export const getUserProject = async (
       return res.status(404).json({message: 'User not found'});
     }
 
-    const recentTitles = userRepls.repls.map((repl) => repl.title);
+    const recentProjects = userRepls.repls.map((repl) => ({
+      title: repl.title,
+      replId: repl.id,
+    }));
 
     res.status(200).json({
       message: 'Recent projects fetched successfully',
-      recentTitles,
+      userId: userId,
+      recentProjects,
     });
   } catch (err) {
     console.log('Internal server error', err);
